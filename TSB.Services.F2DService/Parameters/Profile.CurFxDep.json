@@ -1,0 +1,28 @@
+{
+  "ProfileName": "RateX.txt",
+  "TableName": "dbo.CurFxDepRate",
+  "Columns": [ "Date", "Code", "CurrencyCode", "Desc", "Interest" ],
+  "ColumnsHis": [ "Date", "Code", "CurrencyCode", "Desc", "Interest" ],
+  "CodeMapping": [
+    {
+      "Code": "02",
+      "Tags": [ "USD放款", "AUD放款" ]
+    },
+    {
+      "Code": "03",
+      "Tags": [ "USD一個月", "AUD一個月" ]
+    },
+    {
+      "Code": "04",
+      "Tags": [ "USD三個月", "AUD三個月" ]
+    },
+    {
+      "Code": "P1",
+      "Tags": [ "USD二個月", "AUD二個月" ]
+    },
+    {
+      "Code": "P2",
+      "Tags": [ "USD七個月", "AUD七個月" ]
+    }
+  ]
+}

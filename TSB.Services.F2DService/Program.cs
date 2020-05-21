@@ -14,12 +14,22 @@ namespace TSB.Services.F2DService
         /// </summary>
         static void Main()
         {
-            ServiceBase[] ServicesToRun;
-            ServicesToRun = new ServiceBase[]
+            if (Environment.UserInteractive)
             {
-                new Service1()
-            };
-            ServiceBase.Run(ServicesToRun);
+                DataImportService svc = new DataImportService();
+                svc.TestStartupAndStop(null);
+                
+            }
+            else
+            {
+                ServiceBase[] ServicesToRun;
+                ServicesToRun = new ServiceBase[]
+                {
+                new DataImportService()
+                };
+                ServiceBase.Run(ServicesToRun);
+            }
+            
         }
     }
 }

@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // 組件的一般資訊是由下列的屬性集控制。
 // 變更這些屬性的值即可修改組件的相關
 // 資訊。
-[assembly: AssemblyTitle("TSB.Services.F2DService")]
-[assembly: AssemblyDescription("檔案轉入ＤＢ服務")]
+[assembly: AssemblyTitle("TSB.Operations")]
+[assembly: AssemblyDescription("執行緒通用物件")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Li-Ying, Liang")]
-[assembly: AssemblyProduct("TSB.Services.F2DService")]
+[assembly: AssemblyProduct("TSB.Operations")]
 [assembly: AssemblyCopyright("Copyright ©  2020")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // 下列 GUID 為專案公開 (Expose) 至 COM 時所要使用的 typelib ID
-[assembly: Guid("f85094c3-8478-4425-92a0-40c404dfd8b5")]
+[assembly: Guid("4f202cf1-e43b-4205-85ef-c1afea9aa744")]
 
 // 組件的版本資訊由下列四個值所組成: 
 //

@@ -1,6 +1,6 @@
 ﻿namespace TSB.Services.F2DService
 {
-    partial class Service1
+    partial class DataImportService
     {
         /// <summary> 
         /// 設計工具所需的變數。
@@ -28,10 +28,20 @@
         /// </summary>
         private void InitializeComponent()
         {
-            components = new System.ComponentModel.Container();
-            this.ServiceName = "Service1";
+            this.fileSystemWatcher = new System.IO.FileSystemWatcher();
+            ((System.ComponentModel.ISupportInitialize)(this.fileSystemWatcher)).BeginInit();
+            // 
+            // DataImportService
+            // 
+            this.CanPauseAndContinue = true;
+            this.CanShutdown = true;
+            this.ServiceName = "CurDepSvc";
+            ((System.ComponentModel.ISupportInitialize)(this.fileSystemWatcher)).EndInit();
+
         }
 
         #endregion
+
+        private System.IO.FileSystemWatcher fileSystemWatcher;
     }
 }

@@ -1,0 +1,11 @@
+{
+  "Folder": ".\\TestSource",
+  "Profiles": 
+  [
+    {
+      "ProfileName": "RateX.txt",
+      "FileName": ".\\Parameters\\Profile.CurFxDep.json",
+      "SourceFileName": "RateX.txt"
+    }
+  ]
+}
