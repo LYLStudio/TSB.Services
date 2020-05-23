@@ -40,7 +40,7 @@
                     }
                 });
 
-                cts.CancelAfter(5000);
+                cts.CancelAfter(Timeout);
 
                 while (true)
                 {

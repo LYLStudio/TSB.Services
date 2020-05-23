@@ -17,10 +17,12 @@
         protected ConcurrentDictionary<string, object> Inbox { get; private set; }
 
         public int Sleep { get => _flowController.Parameter.Sleep; }
+        public int Timeout { get; private set; }
 
         public Manager(Parameter parameter)
         {
             Inbox = new ConcurrentDictionary<string, object>();
+            Timeout = parameter.Timeout;
 
             _messenger = new Operator(parameter.MessengerParam);
 #if DEBUG
