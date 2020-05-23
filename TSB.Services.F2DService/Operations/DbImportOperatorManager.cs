@@ -15,6 +15,10 @@
 
     public class DbImportOperatorManager : Manager
     {
+        public DbImportOperatorManager(Parameter parameter) : base(parameter)
+        {
+        }
+
         public async Task<object> SetDataAsync(string ticketId, string sql, params object[] sqlParameters)
         {
             object result = null;
@@ -66,7 +70,7 @@
             return result;
         }
 
-        protected override object Log(object[] parameters)
+        protected override object SendMessage(object[] parameters)
         {
             var raw = JsonConvert.SerializeObject(parameters);
             Debug.WriteLine($"[{DateTime.Now:O}]{raw}");
@@ -74,7 +78,7 @@
         }
 
 #if DEBUG
-        protected override void OnLoggerOperatorOperationTriggered(object sender, OperationEventArgs e)
+        protected override void OnMessengerOperationTriggered(object sender, OperationEventArgs e)
         {
             if (e.HasError)
             {

@@ -7,61 +7,75 @@
     using System.Text;
     using System.Threading.Tasks;
 
-    public class Manager
+    public partial class Manager
     {
-        private readonly Operator _flowControlOperator = null;
-        private readonly Operator _loggerOperator = null;
-        private readonly Operator[] _operators = null;
+        private readonly Operator _flowController = null;
+        private readonly Operator _messenger = null;
+        private readonly Dictionary<string, Operator> _operators = null;
         private int index = 0;
 
         protected ConcurrentDictionary<string, object> Inbox { get; private set; }
 
-        public int Sleep { get => _flowControlOperator.Sleep; }
+        public int Sleep { get => _flowController.Parameter.Sleep; }
 
-        public Manager(int operatorCount = 2)
+        public Manager(Parameter parameter)
         {
             Inbox = new ConcurrentDictionary<string, object>();
 
-            _loggerOperator = new Operator();
+            _messenger = new Operator(parameter.MessengerParam);
 #if DEBUG
-            _loggerOperator.OperationTriggered += OnLoggerOperatorOperationTriggered;
+            _messenger.OperationTriggered += OnMessengerOperationTriggered;
 #endif
-            _flowControlOperator = new Operator();
-            _flowControlOperator.OperationTriggered += OnFlowControlOperatorOperationTriggered;
+            _flowController = new Operator(parameter.FlowControllerParam);
+            _flowController.OperationTriggered += OnFlowControllerOperationTriggered;
 
-            _operators = new Operator[operatorCount];
-            for (int i = 0; i < _operators.Length; i++)
+            _operators = new Dictionary<string, Operator>();
+            parameter.OperatorParams.ForEach(o =>
             {
-                _operators[i] = new Operator($"Worker{i:00}");
-                _operators[i].OperationTriggered += OnWorkingOperationTriggered;
-            }
+                var op = new Operator(o);
+                op.OperationTriggered += OnWorkerOperationTriggered;
+                _operators.Add(op.Parameter.Name, op);
+            });
         }
 
-        protected void DoWork(Operator.Operation operation)
+        protected virtual void DoWork(Operator.Operation operation)
         {
-            _flowControlOperator.Enqueue(new Operator.Operation()
+            _flowController.Enqueue(new Operator.Operation()
             {
                 Parameters = new object[] { operation },
                 Callback = (objs) =>
                 {
-                    index = (++index) % _operators.Length;
-                    _operators[index].Enqueue((Operator.Operation)objs[0]);
-                    return $"_operator[{index}]({_operators[index].Id}) start working...";
+                    index = (++index) % _operators.Count;
+                    var worker = _operators.Values.ToList()[index];
+                    worker.Enqueue((Operator.Operation)objs[0]);
+                    return $"[{worker.Parameter.Name}] start working...";
                 }
             });
         }
 
-        private void OnWorkingOperationTriggered(object sender, OperationEventArgs e)
+        protected virtual void DoWork(Operator.Operation operation, string workerName)
         {
-            _flowControlOperator.Enqueue(new Operator.Operation()
+            if (_operators.TryGetValue(workerName, out Operator worker))
+            {
+                worker.Enqueue(operation);
+            }
+            else
+            {
+                //TODO:
+            }
+        }
+
+        protected virtual void OnWorkerOperationTriggered(object sender, OperationEventArgs e)
+        {
+            _flowController.Enqueue(new Operator.Operation()
             {
                 Parameters = new object[] { e },
                 Callback = objs =>
                 {
-                    _loggerOperator.Enqueue(new Operator.Operation()
+                    _messenger.Enqueue(new Operator.Operation()
                     {
                         Parameters = new object[] { objs[0] },
-                        Callback = Log
+                        Callback = SendMessage
                     });
 
                     object result = null;
@@ -78,22 +92,22 @@
         }
 
 #if DEBUG
-        protected virtual void OnLoggerOperatorOperationTriggered(object sender, OperationEventArgs e)
+        protected virtual void OnMessengerOperationTriggered(object sender, OperationEventArgs e)
         {
 
         }
 #endif
 
-        private void OnFlowControlOperatorOperationTriggered(object sender, OperationEventArgs e)
+        protected virtual void OnFlowControllerOperationTriggered(object sender, OperationEventArgs e)
         {
-            _loggerOperator.Enqueue(new Operator.Operation()
+            _messenger.Enqueue(new Operator.Operation()
             {
                 Parameters = new object[] { e },
-                Callback = Log
+                Callback = SendMessage
             });
         }
 
-        protected virtual object Log(object[] parameters)
+        protected virtual object SendMessage(object[] parameters)
         {
             throw new NotImplementedException();
         }

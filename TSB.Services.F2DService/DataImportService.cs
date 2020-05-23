@@ -27,7 +27,23 @@
         public DataImportService()
         {
             InitializeComponent();
-            _manager = new Operations.DbImportOperatorManager();
+
+            //TODO:參數設定可從外部處理
+            var parameter = new DbImportOperatorManager.Parameter()
+            {
+                FlowControllerParam = new TSB.Operations.Operator.ParameterInfo($"{nameof(DbImportOperatorManager)}_FlowController"),
+                MessengerParam = new TSB.Operations.Operator.ParameterInfo($"{nameof(DbImportOperatorManager)}_Messenger"),
+                Timeout = 5000,
+                OperatorParams = new List<TSB.Operations.Operator.ParameterInfo>()
+                {
+                    new TSB.Operations.Operator.ParameterInfo("Worker00"),
+                    new TSB.Operations.Operator.ParameterInfo("Worker01"),
+                    new TSB.Operations.Operator.ParameterInfo("Worker02"),
+                    new TSB.Operations.Operator.ParameterInfo("Worker03")
+                }
+            };
+
+            _manager = new DbImportOperatorManager(parameter);
             Reload();
             fileSystemWatcher.Changed += FileSystemWatcher_Changed;
             fileSystemWatcher.Path = _definition.Folder;

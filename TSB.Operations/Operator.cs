@@ -2,11 +2,7 @@
 {
     using System;
     using System.Collections.Concurrent;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Text;
     using System.Threading;
-    using System.Threading.Tasks;
 
     public partial class Operator : IDisposable
     {
@@ -16,21 +12,19 @@
 
         private ConcurrentQueue<Operation> OperationQueue { get; set; }
 
-        public string Id { get; private set; }
-        public int Sleep { get; private set; }
+        public ParameterInfo Parameter { get; private set; }
 
         public event EventHandler<OperationEventArgs> OperationTriggered;
 
-        public Operator(string id = "", int sleep = 100)
+        public Operator(ParameterInfo parameter)
         {
-            Id = id;
-            Sleep = sleep;
+            Parameter = new ParameterInfo(parameter.Name, parameter.Sleep, parameter.Priority);
             OperationQueue = new ConcurrentQueue<Operation>();
             _resetEvent = new AutoResetEvent(false);
             _thread = new Thread(Start)
             {
-                Name = id,
-                Priority = ThreadPriority.Normal,
+                Name = Parameter.Name,
+                Priority = Parameter.Priority,
                 IsBackground = true
             };
 
@@ -46,6 +40,8 @@
                     Operation = operation
                 };
                 OnOperationTriggered(result, new ArgumentException($"{nameof(operation)} is not valid or callback is null"));
+
+                return;
             }
 
             try
@@ -89,7 +85,7 @@
                     _resetEvent.WaitOne();
                 }
 
-                _resetEvent.WaitOne(Sleep);
+                _resetEvent.WaitOne(Parameter.Sleep);
             }
         }
 
