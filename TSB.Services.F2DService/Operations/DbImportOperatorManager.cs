@@ -15,8 +15,8 @@
 
     public class DbImportOperatorManager : Manager
     {
-        public DbImportOperatorManager(Parameter parameter) : base(parameter)
-        {
+        public DbImportOperatorManager(ManagerParameter parameter) : base(parameter)
+        {           
         }
 
         public async Task<object> SetDataAsync(string ticketId, string sql, params object[] sqlParameters)
@@ -25,20 +25,39 @@
             var cts = new CancellationTokenSource();
             try
             {
-                DoWork(new Operator.Operation()
-                {
+                var op = new Operation() {
                     TicketId = ticketId,
-                    Parameters = new object[] { sql, sqlParameters },
-                    Callback = objs =>
+                    Parameters = new object[] { ticketId, cts.Token, sql, sqlParameters }
+                };
+
+                op.Callback = objs => {
+                    var ticket = objs[0].ToString();
+                    var token = (CancellationToken)objs[1];
+
+                    if (token.IsCancellationRequested)
                     {
-                        using (var db = new RateInfoEntities())
-                        {
-                            var cmd = objs[0].ToString();
-                            var sqlParams = (object[])objs[1];
-                            return db.Database.ExecuteSqlCommand(cmd, sqlParams);
-                        }
+                        token.ThrowIfCancellationRequested();
                     }
-                });
+
+                    object dbResult = null; ;
+                    using (var db = new RateInfoEntities())
+                    {
+                        var cmd = objs[2].ToString();
+                        var sqlParams = (object[])objs[3];
+                        dbResult = db.Database.ExecuteSqlCommand(cmd, sqlParams);
+                    }
+
+                    var opResult = new OperationResult()
+                    {
+                        IsOK = true,
+                        Operation = op,
+                        ResultData = dbResult
+                    };
+
+                    Inbox.TryAdd(ticket, opResult);
+                };
+
+                DoWork(op);
 
                 cts.CancelAfter(Timeout);
 
@@ -50,6 +69,7 @@
                     }
                     await Task.Delay(Sleep, cts.Token);
                 }
+                
             }
             catch (ArgumentOutOfRangeException)
             {
@@ -66,26 +86,10 @@
             finally
             {
             }
-
+            
             return result;
         }
 
-        protected override object SendMessage(object[] parameters)
-        {
-            var raw = JsonConvert.SerializeObject(parameters);
-            Debug.WriteLine($"[{DateTime.Now:O}]{raw}");
-            return raw;
-        }
-
-#if DEBUG
-        protected override void OnMessengerOperationTriggered(object sender, OperationEventArgs e)
-        {
-            if (e.HasError)
-            {
-                Debug.WriteLine(e.Error);
-            }
-        }
-#endif
-
+      
     }
 }

@@ -12,13 +12,13 @@
 
         private ConcurrentQueue<Operation> OperationQueue { get; set; }
 
-        public ParameterInfo Parameter { get; private set; }
+        public OperatorParameter Parameter { get; private set; }
 
-        public event EventHandler<OperationEventArgs> OperationTriggered;
+        public event EventHandler<OperationEventArgs> OperationOccurred;
 
-        public Operator(ParameterInfo parameter)
+        public Operator(OperatorParameter parameter)
         {
-            Parameter = new ParameterInfo(parameter.Name, parameter.Sleep, parameter.Priority);
+            Parameter = new OperatorParameter(parameter.Name, parameter.OperatorType, parameter.Sleep, parameter.Priority);
             OperationQueue = new ConcurrentQueue<Operation>();
             _resetEvent = new AutoResetEvent(false);
             _thread = new Thread(Start)
@@ -35,11 +35,14 @@
         {
             if (!(operation is Operation) || operation.Callback is null)
             {
+                var msg = $"{nameof(operation)} is not valid or callback is null";
                 var result = new OperationResult()
                 {
-                    Operation = operation
+                    Error = new ArgumentException(msg),
+                    Operation = operation,
+                    Message = msg,
                 };
-                OnOperationTriggered(result, new ArgumentException($"{nameof(operation)} is not valid or callback is null"));
+                OnOperationOccurred(result);
 
                 return;
             }
@@ -51,9 +54,8 @@
             }
             catch (Exception ex)
             {
-                OnOperationTriggered(new OperationResult() { Operation = operation }, ex);
+                OnOperationOccurred(new OperationResult() { Operation = operation, Error = ex, Message = ex.Message });
             }
-
         }
 
         private void Start()
@@ -67,17 +69,12 @@
                     {
                         if (OperationQueue.TryDequeue(out operation))
                         {
-                            var result = operation.Callback?.Invoke(operation.Parameters);
-                            OnOperationTriggered(new OperationResult()
-                            {
-                                Operation = operation,
-                                Result = result
-                            });
+                            operation.Callback?.Invoke(operation.Parameters);
                         }
                     }
                     catch (Exception ex)
                     {
-                        OnOperationTriggered(new OperationResult() { Operation = operation }, ex);
+                        OnOperationOccurred(new OperationResult() { Operation = operation, Error = ex, Message = ex.Message });
                     }
                 }
                 else
@@ -89,9 +86,9 @@
             }
         }
 
-        protected virtual void OnOperationTriggered(OperationResult payload, Exception error = null)
+        protected virtual void OnOperationOccurred(OperationResult payload)
         {
-            OperationTriggered?.Invoke(this, new OperationEventArgs() { Error = error, Payload = payload });
+            OperationOccurred?.Invoke(this, new OperationEventArgs() { Payload = payload });
         }
 
         protected virtual void Dispose(bool disposing)

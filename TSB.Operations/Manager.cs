@@ -19,99 +19,92 @@
         public int Sleep { get => _flowController.Parameter.Sleep; }
         public int Timeout { get; private set; }
 
-        public Manager(Parameter parameter)
+        public event EventHandler<OperationEventArgs> OperationOccurred;
+
+        public Manager(ManagerParameter parameter)
         {
             Inbox = new ConcurrentDictionary<string, object>();
             Timeout = parameter.Timeout;
 
             _messenger = new Operator(parameter.MessengerParam);
-#if DEBUG
-            _messenger.OperationTriggered += OnMessengerOperationTriggered;
-#endif
+            _messenger.OperationOccurred += OnMessengerOperationOccurred; ;
+
             _flowController = new Operator(parameter.FlowControllerParam);
-            _flowController.OperationTriggered += OnFlowControllerOperationTriggered;
+            _flowController.OperationOccurred += OnOperationOccurred;
 
             _operators = new Dictionary<string, Operator>();
             parameter.OperatorParams.ForEach(o =>
             {
                 var op = new Operator(o);
-                op.OperationTriggered += OnWorkerOperationTriggered;
+                op.OperationOccurred += OnOperationOccurred;
                 _operators.Add(op.Parameter.Name, op);
             });
         }
 
-        protected virtual void DoWork(Operator.Operation operation)
+        private void OnMessengerOperationOccurred(object sender, OperationEventArgs e)
         {
-            _flowController.Enqueue(new Operator.Operation()
+            throw new NotImplementedException();
+        }
+
+        protected virtual void DoWork(Operation operation)
+        {
+            _flowController.Enqueue(new Operation()
             {
                 Parameters = new object[] { operation },
                 Callback = (objs) =>
                 {
                     index = (++index) % _operators.Count;
                     var worker = _operators.Values.ToList()[index];
-                    worker.Enqueue((Operator.Operation)objs[0]);
-                    return $"[{worker.Parameter.Name}] start working...";
+                    worker.Enqueue((Operation)objs[0]);
                 }
             });
         }
 
-        protected virtual void DoWork(Operator.Operation operation, string workerName)
+        protected virtual void DoWork(Operation operation, string workerName)
         {
-            if (_operators.TryGetValue(workerName, out Operator worker))
+            _flowController.Enqueue(new Operation()
             {
-                worker.Enqueue(operation);
-            }
-            else
-            {
-                //TODO:
-            }
-        }
-
-        protected virtual void OnWorkerOperationTriggered(object sender, OperationEventArgs e)
-        {
-            _flowController.Enqueue(new Operator.Operation()
-            {
-                Parameters = new object[] { e },
-                Callback = objs =>
+                Parameters = new object[] { operation, workerName },
+                Callback = (objs) =>
                 {
-                    _messenger.Enqueue(new Operator.Operation()
+                    if (_operators.TryGetValue(objs[1].ToString(), out Operator worker))
                     {
-                        Parameters = new object[] { objs[0] },
-                        Callback = SendMessage
-                    });
-
-                    object result = null;
-                    var args = (OperationEventArgs)objs[0];
-                    if (!Inbox.ContainsKey(args.Payload.Operation.TicketId))
-                    {
-                        if (Inbox.TryAdd(args.Payload.Operation.TicketId, args.Payload.Result))
-                            result = args.Payload.Result;
+                        worker.Enqueue((Operation)objs[0]);
                     }
-
-                    return result;
+                    else
+                    {
+                        throw new ArgumentNullException(nameof(workerName));
+                    }
                 }
             });
         }
 
-#if DEBUG
-        protected virtual void OnMessengerOperationTriggered(object sender, OperationEventArgs e)
+        protected virtual void OnOperationOccurred(object sender, OperationEventArgs e)
         {
-
-        }
-#endif
-
-        protected virtual void OnFlowControllerOperationTriggered(object sender, OperationEventArgs e)
-        {
-            _messenger.Enqueue(new Operator.Operation()
+            _messenger.Enqueue(new Operation()
             {
+                TicketId = e.Payload.Operation.TicketId,
                 Parameters = new object[] { e },
-                Callback = SendMessage
-            });
-        }
+                Callback = (m) =>
+                {
 
-        protected virtual object SendMessage(object[] parameters)
-        {
-            throw new NotImplementedException();
+                }
+            });
+
+            if (sender is Operator op)
+            {
+                _flowController.Enqueue(new Operation()
+                {
+                    TicketId = e.Payload.Operation.TicketId,
+                    Parameters = new object[] { e.Payload },
+                    Callback = objs =>
+                    {
+                        var result = (OperationResult)objs[0];
+                        Inbox.TryAdd(result.Operation.TicketId, result);
+                    }
+                });
+
+            }
         }
     }
 }
