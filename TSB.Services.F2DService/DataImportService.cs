@@ -15,6 +15,7 @@
 
     using Newtonsoft.Json;
 
+    using TSB.Operations;
     using TSB.Services.F2DService.Models.Parameters;
     using TSB.Services.F2DService.Operations;
 
@@ -29,24 +30,30 @@
             InitializeComponent();
 
             //TODO:參數設定可從外部處理
-            var parameter = new DbImportOperatorManager.Parameter()
+            var parameter = new ManagerParameter()
             {
-                FlowControllerParam = new TSB.Operations.Operator.ParameterInfo($"{nameof(DbImportOperatorManager)}_FlowController"),
-                MessengerParam = new TSB.Operations.Operator.ParameterInfo($"{nameof(DbImportOperatorManager)}_Messenger"),
-                Timeout = 5000,
-                OperatorParams = new List<TSB.Operations.Operator.ParameterInfo>()
+                FlowControllerParam = new OperatorParameter($"{nameof(DbImportOperatorManager)}_FlowController", OperatorType.FlowController),
+                MessengerParam = new OperatorParameter($"{nameof(DbImportOperatorManager)}_Messenger", OperatorType.Messenger),
+                Timeout = 15000,
+                OperatorParams = new List<OperatorParameter>()
                 {
-                    new TSB.Operations.Operator.ParameterInfo("Worker00"),
-                    new TSB.Operations.Operator.ParameterInfo("Worker01"),
-                    new TSB.Operations.Operator.ParameterInfo("Worker02"),
-                    new TSB.Operations.Operator.ParameterInfo("Worker03")
+                    new OperatorParameter("Worker00"),
+                    new OperatorParameter("Worker01"),
+                    new OperatorParameter("Worker02"),
+                    new OperatorParameter("Worker03")
                 }
             };
 
             _manager = new DbImportOperatorManager(parameter);
+            _manager.OperationOccurred += _manager_OperationOccurred;
             Reload();
             fileSystemWatcher.Changed += FileSystemWatcher_Changed;
             fileSystemWatcher.Path = _definition.Folder;
+        }
+
+        private void _manager_OperationOccurred(object sender, OperationEventArgs e)
+        {
+            throw new NotImplementedException();
         }
 
         private async void FileSystemWatcher_Changed(object sender, FileSystemEventArgs e)
@@ -101,7 +108,9 @@
                             });
                             cmd += $"{string.Join(",", valueParamList)};";
 
-                            var result = await _manager.SetDataAsync(profile.ProfileName, cmd, valueList.ToArray());
+                            var result = await _manager.SetDataAsync(Guid.NewGuid().ToString(), cmd, valueList.ToArray());
+
+                            Debug.WriteLine(JsonConvert.SerializeObject(result, new JsonSerializerSettings() { ReferenceLoopHandling = ReferenceLoopHandling.Ignore}));
                         }
                         else
                         {

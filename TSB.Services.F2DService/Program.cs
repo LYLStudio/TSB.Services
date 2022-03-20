@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.ServiceProcess;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TSB.Services.F2DService
 {
@@ -18,7 +14,7 @@ namespace TSB.Services.F2DService
             {
                 DataImportService svc = new DataImportService();
                 svc.TestStartupAndStop(null);
-                
+
             }
             else
             {
@@ -29,7 +25,7 @@ namespace TSB.Services.F2DService
                 };
                 ServiceBase.Run(ServicesToRun);
             }
-            
+
         }
     }
 }
