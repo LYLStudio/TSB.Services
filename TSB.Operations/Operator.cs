@@ -18,7 +18,7 @@
 
         public Operator(OperatorParameter parameter)
         {
-            Parameter = new OperatorParameter(parameter.Name, parameter.OperatorType, parameter.Sleep, parameter.Priority);
+            Parameter = new OperatorParameter(parameter.Name, parameter.Sleep, parameter.Priority);
             OperationQueue = new ConcurrentQueue<Operation>();
             _resetEvent = new AutoResetEvent(false);
             _thread = new Thread(Start)
@@ -105,13 +105,6 @@
                 _disposedValue = true;
             }
         }
-
-        // // TODO: 僅有當 'Dispose(bool disposing)' 具有會釋出非受控資源的程式碼時，才覆寫完成項
-        // ~Operator()
-        // {
-        //     // 請勿變更此程式碼。請將清除程式碼放入 'Dispose(bool disposing)' 方法
-        //     Dispose(disposing: false);
-        // }
 
         public void Dispose()
         {

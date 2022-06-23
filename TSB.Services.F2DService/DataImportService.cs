@@ -32,15 +32,15 @@
             //TODO:參數設定可從外部處理
             var parameter = new ManagerParameter()
             {
-                FlowControllerParam = new OperatorParameter($"{nameof(DbImportOperatorManager)}_FlowController", OperatorType.FlowController),
-                MessengerParam = new OperatorParameter($"{nameof(DbImportOperatorManager)}_Messenger", OperatorType.Messenger),
+                FlowControllerParam = new OperatorParameter($"{nameof(DbImportOperatorManager)}_FlowController"),
+                MessengerParam = new OperatorParameter($"{nameof(DbImportOperatorManager)}_Messenger"),
                 Timeout = 15000,
                 OperatorParams = new List<OperatorParameter>()
                 {
-                    new OperatorParameter("Worker00"),
-                    new OperatorParameter("Worker01"),
-                    new OperatorParameter("Worker02"),
-                    new OperatorParameter("Worker03")
+                    new OperatorParameter("00"),
+                    new OperatorParameter("01"),
+                    new OperatorParameter("02"),
+                    new OperatorParameter("03")
                 }
             };
 

@@ -13,23 +13,14 @@
     public class OperatorParameter
     {
         public string Name { get; set; }
-        public OperatorType OperatorType { get; }
         public int Sleep { get; set; }
         public ThreadPriority Priority { get; set; }
-        public OperatorParameter(string name, OperatorType operatorType = OperatorType.Worker, int sleep = 1, ThreadPriority priority = ThreadPriority.Normal)
+        public OperatorParameter(string name, int sleep = 1, ThreadPriority priority = ThreadPriority.Normal)
         {
             Name = name;
-            OperatorType = operatorType;
             Sleep = sleep;
             Priority = priority;
         }
-    }
-
-    public enum OperatorType
-    {
-        Worker,
-        FlowController,
-        Messenger
     }
 
     public class OperationResult : IOperationResult
